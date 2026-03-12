@@ -1,0 +1,26 @@
+# Source
+src/
+test/
+assets/
+
+# Config
+tsconfig.json
+.eslintrc*
+eslint.config.*
+.prettierrc*
+.prettierignore
+.editorconfig
+
+# Dev tooling
+.husky/
+.github/
+.claude/
+.homingo/
+
+# Misc
+*.test.ts
+*.spec.ts
+.gitignore
+CONTRIBUTING.md
+SECURITY.md
+CODE_OF_CONDUCT.md
