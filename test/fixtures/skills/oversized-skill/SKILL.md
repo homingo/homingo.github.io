@@ -1,0 +1,8 @@
+---
+name: oversized-skill
+description: "Handles complete financial document processing pipeline including invoice parsing, receipt scanning, and bill extraction from PDFs and images; manages tax document analysis including W-2 processing, 1099 form extraction, and tax return preparation with deduction optimization; performs expense tracking and categorization with budget matching, reimbursement processing, and spending trend analysis; generates comprehensive financial reports including profit and loss statements, balance sheets, cash flow analysis, and quarterly financial summaries; also handles accounts payable and receivable management, vendor payment tracking, customer billing reconciliation, and overdue payment notifications; additionally processes payroll calculations, tax withholding computations, benefits deductions, and direct deposit coordination; manages compliance checking for financial regulations including SOX compliance validation, audit trail maintenance, and regulatory reporting preparation; performs currency conversion, multi-currency transaction reconciliation, and international tax treaty application for cross-border financial operations; handles financial forecasting using historical data analysis, seasonal trend modeling, and predictive analytics for budget planning and resource allocation; supports integration with external accounting systems through API-based data synchronization, automated journal entry creation, and real-time ledger updates across multiple accounting platforms."
+---
+
+# Oversized Skill
+
+A massively overloaded financial processing skill that covers far too many distinct intents — perfect for testing the shard command.

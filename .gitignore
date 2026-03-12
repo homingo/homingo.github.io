@@ -1,0 +1,20 @@
+.claude
+node_modules
+.env.local
+.env
+.next
+generated
+tsconfig.tsbuildinfo
+yarn.lock
+pnpm-lock.yaml
+
+# clerk configuration (can include secrets)
+/.clerk/
+
+# build output
+dist/
+
+# VitePress
+docs/.vitepress/dist
+docs/.vitepress/cache
+
