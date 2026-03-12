@@ -1,0 +1,89 @@
+{
+  "name": "homingo",
+  "version": "0.11.0",
+  "description": "Homingo — the homing instinct for your AI skills. Detect, diagnose, and fix routing drift.",
+  "type": "module",
+  "license": "MIT",
+  "author": "Ravi Y.",
+  "homepage": "https://github.com/homingo/homingo.github.io.git#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/homingo/homingo.github.io.git"
+  },
+  "bugs": {
+    "url": "https://github.com/homingo/homingo.github.io/issues"
+  },
+  "keywords": [
+    "ai",
+    "skills",
+    "routing",
+    "drift",
+    "lint",
+    "audit",
+    "llm",
+    "cli",
+    "devtools"
+  ],
+  "bin": {
+    "homingo": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist",
+    "LICENSE",
+    "README.md",
+    "CHANGELOG.md"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx src/index.ts",
+    "start": "node dist/index.js",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src/",
+    "lint:fix": "eslint src/ --fix",
+    "format": "prettier --write \"src/**/*.ts\"",
+    "format:check": "prettier --check \"src/**/*.ts\"",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "version": "node scripts/sync-version.js && git add docs/.vitepress/config.ts",
+    "prepare": "husky",
+    "docs:dev": "vitepress dev docs",
+    "docs:build": "vitepress build docs",
+    "docs:preview": "vitepress preview docs"
+  },
+  "lint-staged": {
+    "*.ts": [
+      "eslint --fix",
+      "prettier --write"
+    ]
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.39.0",
+    "@inquirer/prompts": "^8.3.0",
+    "chalk": "^5.4.1",
+    "cli-table3": "^0.6.5",
+    "commander": "^13.1.0",
+    "dotenv": "^17.3.1",
+    "gray-matter": "^4.0.3",
+    "openai": "^6.27.0",
+    "ora": "^8.2.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@types/node": "^22.13.0",
+    "eslint": "^10.0.3",
+    "eslint-config-prettier": "^10.1.8",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.3.3",
+    "prettier": "^3.8.1",
+    "tsx": "^4.19.0",
+    "typescript": "^5.7.0",
+    "typescript-eslint": "^8.57.0",
+    "vitepress": "^1.6.4",
+    "vitest": "^4.0.18"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
