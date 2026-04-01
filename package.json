@@ -1,6 +1,6 @@
 {
   "name": "homingo",
-  "version": "0.14.0",
+  "version": "0.15.0",
   "description": "Homingo — the homing instinct for your AI skills. Detect, diagnose, and fix routing drift.",
   "type": "module",
   "license": "MIT",

@@ -4,6 +4,12 @@ All notable changes to Homingo will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.15.0] - 2026-04-01
+
+### Changed
+
+- **Configurable report retention** — Replaced the hardcoded limit of 10 HTML reports per command with a configurable `output.maxReportsPerCommand` setting (default 50). Set to `0` for unlimited retention. Configurable via `homingo init` or `~/.homingo/config.json`.
+
 ## [0.14.0] - 2026-03-30
 
 ### Changed
