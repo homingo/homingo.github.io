@@ -246,7 +246,13 @@ export async function auditCommand(options: AuditOptions): Promise<void> {
   });
   if (cacheHits > 0) collector.setCacheHits(cacheHits);
   const metadata = collector.finalize(dual.combinedUsage());
-  const stored = saveRun("audit", metadata, fleetReport, reportDir);
+  const stored = saveRun(
+    "audit",
+    metadata,
+    fleetReport,
+    reportDir,
+    config.output.maxReportsPerCommand
+  );
 
   if (options.open !== false && !isHeadless()) {
     openInBrowser(stored.htmlPath);

@@ -12,7 +12,7 @@ import { generateHtml } from "./html-renderer.js";
 import { generateLogsViewer } from "./logs-viewer.js";
 import type { LogsByCommand, LogEntry } from "./logs-viewer.js";
 
-const MAX_RUNS_PER_COMMAND = 10;
+export const DEFAULT_MAX_RUNS_PER_COMMAND = 50;
 
 export interface StoredRun {
   metadataPath: string;
@@ -27,7 +27,8 @@ export function saveRun(
   command: CommandName,
   metadata: RunMetadata,
   commandData: unknown,
-  reportDir: string
+  reportDir: string,
+  maxReportsPerCommand?: number
 ): StoredRun {
   const commandDir = join(reportDir, command);
   mkdirSync(commandDir, { recursive: true });
@@ -47,11 +48,14 @@ export function saveRun(
   const html = generateHtml(command, metadata, commandData);
   writeFileSync(htmlPath, html);
 
-  // Enforce retention — keep last N runs
-  enforceRetention(commandDir, MAX_RUNS_PER_COMMAND);
+  // Enforce retention — keep last N runs (0 = unlimited)
+  const maxRuns = maxReportsPerCommand ?? DEFAULT_MAX_RUNS_PER_COMMAND;
+  if (maxRuns > 0) {
+    enforceRetention(commandDir, maxRuns);
+  }
 
   // Regenerate the logs viewer so it's always up-to-date
-  refreshLogsViewer(reportDir);
+  refreshLogsViewer(reportDir, maxRuns);
 
   return { metadataPath, htmlPath };
 }
@@ -92,7 +96,8 @@ export function enforceRetention(commandDir: string, maxRuns: number): void {
  * Scan all command directories and regenerate the top-level logs-viewer.html.
  * Called automatically after every saveRun so the viewer is always current.
  */
-export function refreshLogsViewer(reportDir: string): void {
+export function refreshLogsViewer(reportDir: string, maxRuns?: number): void {
+  const limit = maxRuns ?? DEFAULT_MAX_RUNS_PER_COMMAND;
   const commands: CommandName[] = ["audit", "lint", "scan", "map"];
   const allRuns: LogsByCommand = { audit: [], lint: [], scan: [], map: [] };
 
@@ -100,11 +105,11 @@ export function refreshLogsViewer(reportDir: string): void {
     const commandDir = join(reportDir, cmd);
     if (!existsSync(commandDir)) continue;
 
-    const jsonFiles = readdirSync(commandDir)
+    let jsonFiles = readdirSync(commandDir)
       .filter((f) => f.endsWith(".json"))
       .sort()
-      .reverse() // newest first
-      .slice(0, MAX_RUNS_PER_COMMAND);
+      .reverse(); // newest first
+    if (limit > 0) jsonFiles = jsonFiles.slice(0, limit);
 
     for (const jsonFile of jsonFiles) {
       const jsonPath = join(commandDir, jsonFile);

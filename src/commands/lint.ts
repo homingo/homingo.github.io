@@ -314,7 +314,13 @@ async function runFleetLint(
 
   const reportDir = resolvePath(ctx.config.output.reportDir);
   const metadata = collector.finalize(dual.combinedUsage());
-  const stored = saveRun("lint", metadata, lintData, reportDir);
+  const stored = saveRun(
+    "lint",
+    metadata,
+    lintData,
+    reportDir,
+    ctx.config.output.maxReportsPerCommand
+  );
 
   if (options.open !== false && !isHeadless()) {
     openInBrowser(stored.htmlPath);
@@ -513,7 +519,13 @@ async function runPairLint(options: LintOptions, skills: Skill[], ctx: LintConte
 
   const reportDir = resolvePath(ctx.config.output.reportDir);
   const metadata = collector.finalize(dual.combinedUsage());
-  const stored = saveRun("lint", metadata, lintData, reportDir);
+  const stored = saveRun(
+    "lint",
+    metadata,
+    lintData,
+    reportDir,
+    ctx.config.output.maxReportsPerCommand
+  );
 
   if (options.open !== false && !isHeadless()) {
     openInBrowser(stored.htmlPath);
@@ -702,7 +714,13 @@ async function runSingleSkillLint(
 
   const reportDir = resolvePath(ctx.config.output.reportDir);
   const metadata = collector.finalize(dual.combinedUsage());
-  const stored = saveRun("lint", metadata, lintData, reportDir);
+  const stored = saveRun(
+    "lint",
+    metadata,
+    lintData,
+    reportDir,
+    ctx.config.output.maxReportsPerCommand
+  );
 
   if (options.open !== false && !isHeadless()) {
     openInBrowser(stored.htmlPath);
@@ -836,7 +854,13 @@ async function runFixFromRun(
   });
 
   const metadata = collector.finalize(dual.combinedUsage());
-  const stored = saveRun("lint", metadata, newLintData, reportDir);
+  const stored = saveRun(
+    "lint",
+    metadata,
+    newLintData,
+    reportDir,
+    ctx.config.output.maxReportsPerCommand
+  );
 
   if (options.open !== false && !isHeadless()) {
     openInBrowser(stored.htmlPath);

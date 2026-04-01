@@ -126,6 +126,18 @@ export async function initCommand(directory: string, configPath?: string): Promi
     default: existing?.output?.reportDir ?? DEFAULT_CONFIG.output.reportDir,
   });
 
+  const maxReportsPerCommand = await input({
+    message: "Max reports per command (0 = unlimited):",
+    default: String(
+      existing?.output?.maxReportsPerCommand ?? DEFAULT_CONFIG.output.maxReportsPerCommand
+    ),
+    validate: (v) => {
+      const n = parseInt(v, 10);
+      if (isNaN(n) || n < 0) return "Must be 0 (unlimited) or a positive number";
+      return true;
+    },
+  });
+
   const format = await select({
     message: "Report format:",
     choices: [
@@ -152,6 +164,7 @@ export async function initCommand(directory: string, configPath?: string): Promi
     output: {
       reportDir,
       format,
+      maxReportsPerCommand: parseInt(maxReportsPerCommand, 10),
     },
   };
 

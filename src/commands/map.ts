@@ -171,7 +171,7 @@ export async function mapCommand(options: MapOptions): Promise<void> {
   };
 
   const reportDir = resolvePath(config.output.reportDir);
-  const stored = saveRun("map", metadata, mapData, reportDir);
+  const stored = saveRun("map", metadata, mapData, reportDir, config.output.maxReportsPerCommand);
   if (options.open !== false && !isHeadless()) {
     openInBrowser(stored.htmlPath);
   }

@@ -16,7 +16,8 @@ Homingo stores its configuration in `~/.homingo/config.json`. Run `homingo init`
   },
   "output": {
     "reportDir": "~/.homingo/reports",
-    "format": "both"
+    "format": "both",
+    "maxReportsPerCommand": 50
   }
 }
 ```
@@ -66,6 +67,7 @@ Path to the directory containing your skill folders. Each skill folder must cont
 |-------|---------|-------------|
 | `reportDir` | `"~/.homingo/reports"` | Directory for HTML reports and run metadata |
 | `format` | `"both"` | Output format: `"json"`, `"markdown"`, or `"both"`. Note: HTML reports and JSON data are always written regardless of this setting. |
+| `maxReportsPerCommand` | `50` | Maximum number of HTML reports kept per command. Oldest reports are pruned automatically. Set to `0` for unlimited. |
 
 ## API Keys
 

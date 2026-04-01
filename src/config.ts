@@ -25,6 +25,7 @@ export const DEFAULT_CONFIG: Omit<HomingoConfig, "anthropicApiKey" | "openaiApiK
   output: {
     reportDir: join(homedir(), ".homingo", "reports"),
     format: "both",
+    maxReportsPerCommand: 50,
   },
 };
 

@@ -223,7 +223,7 @@ export async function scanCommand(options: ScanOptions): Promise<void> {
   };
 
   const reportDir = resolvePath(config.output.reportDir);
-  const stored = saveRun("scan", metadata, scanData, reportDir);
+  const stored = saveRun("scan", metadata, scanData, reportDir, config.output.maxReportsPerCommand);
 
   if (options.open !== false && !isHeadless()) {
     openInBrowser(stored.htmlPath);

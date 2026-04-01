@@ -100,5 +100,7 @@ export interface HomingoConfig {
   output: {
     reportDir: string;
     format: "json" | "markdown" | "both";
+    /** Max HTML reports kept per command. 0 = unlimited. */
+    maxReportsPerCommand?: number;
   };
 }
