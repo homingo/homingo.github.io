@@ -131,6 +131,42 @@ export class PairCache {
     return removed;
   }
 
+  /**
+   * Find a cached result by skill names only, ignoring the prompt/model hash.
+   * Useful when the exact hash is unknown (e.g., scan cross-referencing lint results).
+   * Returns the most recently created non-expired entry for the pair, or null.
+   */
+  findByNames(nameA: string, nameB: string): CacheEntry | null {
+    if (!existsSync(this.cacheDir)) return null;
+
+    const [a, b] = nameA <= nameB ? [nameA, nameB] : [nameB, nameA];
+    let best: CacheEntry | null = null;
+
+    for (const file of readdirSync(this.cacheDir)) {
+      if (!file.endsWith(".json")) continue;
+      let entry: CacheEntry;
+      try {
+        entry = JSON.parse(readFileSync(join(this.cacheDir, file), "utf-8")) as CacheEntry;
+      } catch {
+        continue;
+      }
+      const age = Date.now() - new Date(entry.createdAt).getTime();
+      if (age >= this.ttlMs) continue;
+
+      const ea =
+        entry.report.skillA <= entry.report.skillB ? entry.report.skillA : entry.report.skillB;
+      const eb =
+        entry.report.skillA <= entry.report.skillB ? entry.report.skillB : entry.report.skillA;
+      if (ea !== a || eb !== b) continue;
+
+      if (!best || new Date(entry.createdAt) > new Date(best.createdAt)) {
+        best = entry;
+      }
+    }
+
+    return best;
+  }
+
   /** Remove all entries. Returns count of removed files. */
   clear(): number {
     if (!existsSync(this.cacheDir)) return 0;

@@ -669,16 +669,22 @@ function renderScanBody(data: ScanData, skillInfoMap: SkillInfoMap): string {
   }
 
   if (overlapFindings.length > 0) {
+    const anyTested = overlapFindings.some((p) => p.testedAccuracy !== undefined);
     html += `<section id="overlap-findings">
   <h2>Overlap Findings <span class="count">(${overlapFindings.length})</span></h2>
+  <p class="section-desc heuristic-note">⚠ Heuristic analysis based on keyword overlap — no API calls. Severities may not reflect actual routing accuracy. Run <code>homingo audit</code> or <code>homingo lint</code> to verify.</p>
   <table>
-    <thead><tr><th>Skill Pair</th><th>Overlap</th><th>Severity</th><th>Reason</th></tr></thead>
+    <thead><tr><th>Skill Pair</th><th>Overlap</th><th>Heuristic</th>${anyTested ? "<th>Verified</th>" : ""}<th>Reason</th></tr></thead>
     <tbody>`;
     for (const pair of overlapFindings) {
+      const verifiedCell = anyTested
+        ? `<td>${pair.testedAccuracy !== undefined ? testedAccuracyBadge(pair.testedAccuracy, pair.testedAt) : '<span class="muted">—</span>'}</td>`
+        : "";
       html += `<tr>
       <td>${skillPairCell(pair.skillA, pair.skillB, skillInfoMap)}</td>
       <td>${(pair.overlapScore * 100).toFixed(0)}%</td>
       <td>${severityBadge(pair.severity)}</td>
+      ${verifiedCell}
       <td>${esc(pair.reason)}</td>
     </tr>`;
     }
@@ -845,6 +851,21 @@ function skillRef(name: string, map: SkillInfoMap): string {
 
 function skillPairCell(nameA: string, nameB: string, map: SkillInfoMap): string {
   return `<div>${skillRef(nameA, map)}</div><div class="pair-sep">↔</div><div>${skillRef(nameB, map)}</div>`;
+}
+
+function testedAccuracyBadge(accuracy: number, testedAt?: string): string {
+  const ok = accuracy >= 90;
+  const color = ok ? "#22c55e" : "#dc2626";
+  const icon = ok ? "✅" : "❌";
+  const age = testedAt ? formatAgeHtml(testedAt) : "";
+  return `<span style="white-space:nowrap;font-weight:600;color:${color}">${icon} ${accuracy}%</span>${age ? `<span class="muted" style="display:block;font-size:0.78rem">${esc(age)}</span>` : ""}`;
+}
+
+function formatAgeHtml(iso: string): string {
+  const ms = Date.now() - new Date(iso).getTime();
+  const hours = Math.floor(ms / 3_600_000);
+  if (hours < 24) return `${hours}h ago`;
+  return `${Math.floor(hours / 24)}d ago`;
 }
 
 // ── Utilities ──────────────────────────────────────────────────
@@ -1046,6 +1067,16 @@ section h2 {
   color: var(--text-muted);
   font-size: 0.85rem;
   margin: 3px 0;
+}
+
+.heuristic-note {
+  background: #fefce8;
+  border: 1px solid #fde047;
+  border-radius: 6px;
+  padding: 0.6rem 0.9rem;
+  font-size: 0.85rem;
+  color: #713f12;
+  margin-bottom: 1rem;
 }
 
 table {

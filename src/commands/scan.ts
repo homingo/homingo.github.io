@@ -14,6 +14,7 @@ import { saveRun } from "../reporting/storage.js";
 import { isHeadless, openInBrowser } from "../reporting/opener.js";
 import type { LLMProvider } from "../providers/types.js";
 import type { Skill, DuplicateSkill } from "../types.js";
+import { PairCache } from "../cache/pair-cache.js";
 
 interface ScanOptions {
   allPairs?: boolean;
@@ -45,6 +46,12 @@ export interface ScanPairEntry {
   overlapScore: number;
   reason: string;
   severity: "CRITICAL" | "HIGH" | "MEDIUM" | "LOW";
+  /** Routing accuracy from a prior lint/audit run, if cached. */
+  testedAccuracy?: number;
+  /** ISO timestamp of the cached test. */
+  testedAt?: string;
+  /** Model used in the cached test. */
+  testedModel?: string;
 }
 
 function overlapSeverity(score: number): "CRITICAL" | "HIGH" | "MEDIUM" | "LOW" {
@@ -137,6 +144,18 @@ export async function scanCommand(options: ScanOptions): Promise<void> {
     reason: pair.reason,
     severity: overlapSeverity(pair.overlapScore),
   }));
+
+  // Cross-reference lint/audit cache — attach tested accuracy to flagged pairs
+  const pairCache = new PairCache();
+  for (const pair of overlapPairs) {
+    if (pair.severity === "LOW") continue;
+    const cached = pairCache.findByNames(pair.skillA, pair.skillB);
+    if (cached) {
+      pair.testedAccuracy = cached.report.routingAccuracy;
+      pair.testedAt = cached.createdAt;
+      pair.testedModel = cached.routingModel;
+    }
+  }
 
   // Run scope overload analysis
   const overloadSpinner = ora("Checking scope overload...").start();
@@ -243,11 +262,29 @@ function sanitizeArgs(options: ScanOptions): Record<string, unknown> {
   };
 }
 
+function testedBadge(pair: ScanPairEntry): string {
+  if (pair.testedAccuracy === undefined) return "";
+  const ok = pair.testedAccuracy >= 90;
+  const icon = ok ? chalk.green("✅") : chalk.red("❌");
+  const age = pair.testedAt ? formatAge(pair.testedAt) : "";
+  return `\n  ${icon} ${chalk.dim(`Tested: ${pair.testedAccuracy}% routing accuracy${age ? ` (${age})` : ""}`)}`;
+}
+
+function formatAge(iso: string): string {
+  const ms = Date.now() - new Date(iso).getTime();
+  const hours = Math.floor(ms / 3_600_000);
+  if (hours < 24) return `${hours}h ago`;
+  return `${Math.floor(hours / 24)}d ago`;
+}
+
 function printScanReport(data: ScanData): void {
   const scoreColor =
     data.healthScore >= 80 ? chalk.green : data.healthScore >= 50 ? chalk.yellow : chalk.red;
 
   console.log(`\n${chalk.bold("Homingo Scan Report")}`);
+  console.log(
+    chalk.dim("Heuristic analysis only — no API calls. Run homingo audit to verify flagged pairs.")
+  );
   console.log(
     `Skills: ${data.totalSkills} | ` +
       `Pairs Analyzed: ${data.totalPossiblePairs} | ` +
@@ -271,7 +308,7 @@ function printScanReport(data: ScanData): void {
     for (const pair of criticalHigh) {
       const sevColor = pair.severity === "CRITICAL" ? chalk.red : chalk.yellow;
       table.push([
-        `${pair.skillA} ↔ ${pair.skillB}`,
+        `${pair.skillA} ↔ ${pair.skillB}${testedBadge(pair)}`,
         `${(pair.overlapScore * 100).toFixed(0)}%`,
         sevColor(pair.severity),
         pair.reason,
