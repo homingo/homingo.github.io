@@ -58,6 +58,7 @@ export type CommandResult = AuditResult | LintResult | ScanResult | MapResult;
 export interface SkillEntry {
   name: string;
   description: string;
+  filePath?: string;
 }
 
 export interface RunMetadata {
@@ -112,8 +113,12 @@ export class RunCollector {
     this._skillCount = n;
   }
 
-  setSkills(skills: Array<{ name: string; description: string }>): void {
-    this._skills = skills.map((s) => ({ name: s.name, description: s.description }));
+  setSkills(skills: Array<{ name: string; description: string; filePath?: string }>): void {
+    this._skills = skills.map((s) => ({
+      name: s.name,
+      description: s.description,
+      filePath: s.filePath,
+    }));
   }
 
   setResult(result: CommandResult): void {

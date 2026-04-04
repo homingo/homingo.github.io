@@ -164,7 +164,7 @@ export async function mapCommand(options: MapOptions): Promise<void> {
     model: "local-heuristic",
     provider: "anthropic",
     skillCount: skills.length,
-    skills: skills.map((s) => ({ name: s.name, description: s.description })),
+    skills: skills.map((s) => ({ name: s.name, description: s.description, filePath: s.filePath })),
     tokens: { input: 0, output: 0, total: 0 },
     gitCommitHash: getGitCommitHash(),
     result,

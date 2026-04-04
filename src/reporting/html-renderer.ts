@@ -11,20 +11,25 @@ export function generateHtml(
   metadata: RunMetadata,
   commandData: unknown
 ): string {
+  const skillInfoMap: SkillInfoMap = new Map();
+  for (const s of metadata.skills) {
+    skillInfoMap.set(s.name, { filePath: s.filePath, description: s.description });
+  }
+
   let body: string;
 
   switch (command) {
     case "audit":
-      body = renderAuditBody(commandData as FleetAuditReport);
+      body = renderAuditBody(commandData as FleetAuditReport, skillInfoMap);
       break;
     case "lint":
-      body = renderLintBody(commandData as LintData);
+      body = renderLintBody(commandData as LintData, skillInfoMap);
       break;
     case "scan":
-      body = renderScanBody(commandData as ScanData);
+      body = renderScanBody(commandData as ScanData, skillInfoMap);
       break;
     case "map":
-      body = renderMapBody(commandData as MapData);
+      body = renderMapBody(commandData as MapData, skillInfoMap);
       break;
   }
 
@@ -152,8 +157,11 @@ function renderSkillInventory(meta: RunMetadata): string {
 
   let rows = "";
   for (const skill of meta.skills) {
+    const nameHtml = skill.filePath
+      ? `<a href="file://${esc(skill.filePath)}" class="skill-link" title="${esc(skill.filePath)}">${esc(skill.name)}</a>`
+      : esc(skill.name);
     rows += `<tr>
-      <td><strong>${esc(skill.name)}</strong></td>
+      <td><strong>${nameHtml}</strong></td>
       <td class="skill-desc">${esc(skill.description || "(no description)")}</td>
     </tr>`;
   }
@@ -169,7 +177,7 @@ function renderSkillInventory(meta: RunMetadata): string {
 
 // ── Audit renderer ─────────────────────────────────────────────
 
-function renderAuditBody(report: FleetAuditReport): string {
+function renderAuditBody(report: FleetAuditReport, skillInfoMap: SkillInfoMap): string {
   const sections = [
     { label: "CRITICAL", pairs: report.criticalPairs },
     { label: "HIGH", pairs: report.highPairs },
@@ -218,7 +226,7 @@ function renderAuditBody(report: FleetAuditReport): string {
 
   for (const section of sections) {
     if (section.pairs.length === 0) continue;
-    html += renderPairSection(section.label, section.pairs);
+    html += renderPairSection(section.label, section.pairs, skillInfoMap);
   }
 
   if (report.topFiveOffenders.length > 0) {
@@ -240,7 +248,11 @@ function renderAuditBody(report: FleetAuditReport): string {
   return html;
 }
 
-function renderPairSection(label: string, pairs: PairConflictReport[]): string {
+function renderPairSection(
+  label: string,
+  pairs: PairConflictReport[],
+  skillInfoMap: SkillInfoMap
+): string {
   const color = SEVERITY_COLORS[label] || "#6b7280";
 
   let html = `<section>
@@ -251,7 +263,7 @@ function renderPairSection(label: string, pairs: PairConflictReport[]): string {
 
   for (const pair of pairs) {
     html += `<tr>
-      <td><strong>${esc(pair.skillA)}</strong> ↔ <strong>${esc(pair.skillB)}</strong></td>
+      <td>${skillPairCell(pair.skillA, pair.skillB, skillInfoMap)}</td>
       <td>${pair.routingAccuracy}%${
         (pair.thirdSkillHijackCount ?? 0) > 0
           ? `<br><span class="muted">${pair.thirdSkillHijackRate}% hijacked</span>`
@@ -285,7 +297,7 @@ function renderPairSection(label: string, pairs: PairConflictReport[]): string {
 
 // ── Map renderer ───────────────────────────────────────────────
 
-function renderMapBody(data: MapData): string {
+function renderMapBody(data: MapData, skillInfoMap: SkillInfoMap): string {
   let html = `
 <div class="summary-cards">
   <div class="card card-stat">
@@ -329,7 +341,7 @@ function renderMapBody(data: MapData): string {
     html += `<section><h2>Overlap Hubs</h2><table>
       <thead><tr><th>Skill</th><th>Overlap Degree</th></tr></thead><tbody>`;
     for (const hub of data.overlapHubs) {
-      html += `<tr><td><strong>${esc(hub.name)}</strong></td><td>${hub.overlapDegree}</td></tr>`;
+      html += `<tr><td>${skillRef(hub.name, skillInfoMap)}</td><td>${hub.overlapDegree}</td></tr>`;
     }
     html += `</tbody></table></section>`;
   }
@@ -339,7 +351,7 @@ function renderMapBody(data: MapData): string {
       <thead><tr><th>Pair</th><th>Overlap</th><th>Reason</th></tr></thead><tbody>`;
     for (const pair of data.mergeCandidates) {
       html += `<tr>
-        <td><strong>${esc(pair.skillA)}</strong> ↔ <strong>${esc(pair.skillB)}</strong></td>
+        <td>${skillPairCell(pair.skillA, pair.skillB, skillInfoMap)}</td>
         <td>${Math.round(pair.overlapScore * 100)}%</td>
         <td>${esc(pair.reason)}</td>
       </tr>`;
@@ -352,7 +364,7 @@ function renderMapBody(data: MapData): string {
       <thead><tr><th>Skill</th><th>Description Length</th><th>Reason</th></tr></thead><tbody>`;
     for (const skill of data.overloadedSkills) {
       html += `<tr>
-        <td><strong>${esc(skill.name)}</strong></td>
+        <td>${skillRef(skill.name, skillInfoMap)}</td>
         <td>${skill.descriptionLength} chars</td>
         <td>${esc(skill.reason)}</td>
       </tr>`;
@@ -367,7 +379,7 @@ function renderMapBody(data: MapData): string {
       .map((neighbor) => `${neighbor.name} (${Math.round(neighbor.score * 100)}%)`)
       .join(", ");
     html += `<tr>
-      <td><strong>${esc(profile.name)}</strong></td>
+      <td>${skillRef(profile.name, skillInfoMap)}</td>
       <td>${esc(profile.clusterId)}</td>
       <td>${esc(neighbors || "None")}</td>
       <td>${profile.overloaded ? "Overloaded" : "Within scope"} · overlap degree ${profile.overlapDegree}</td>
@@ -380,7 +392,7 @@ function renderMapBody(data: MapData): string {
 
 // ── Lint renderer ──────────────────────────────────────────────
 
-function renderLintBody(data: LintData): string {
+function renderLintBody(data: LintData, skillInfoMap: SkillInfoMap): string {
   const totalNeighbors = data.failingReports.length + data.passingCount;
   const allPassed = data.failingReports.length === 0;
   const overloaded = (data.shardFindings ?? []).filter((f) => f.isOverloaded);
@@ -431,7 +443,7 @@ function renderLintBody(data: LintData): string {
       <tbody>`;
     for (const r of data.failingReports) {
       html += `<tr>
-        <td>${esc(r.skillA)} ↔ ${esc(r.skillB)}</td>
+        <td>${skillPairCell(r.skillA, r.skillB, skillInfoMap)}</td>
         <td>${r.routingAccuracy}%</td>
         <td>${severityBadge(r.severityLevel)}</td>
         <td>${esc(r.recommendedAction)}</td>
@@ -488,7 +500,7 @@ function renderLintBody(data: LintData): string {
 
     for (const rec of mergeRecs) {
       html += `<div class="merge-card">
-        <h3>${esc(rec.skillA)} + ${esc(rec.skillB)} → <code>${esc(rec.mergedName)}</code></h3>
+        <h3>${skillRef(rec.skillA, skillInfoMap)} + ${skillRef(rec.skillB, skillInfoMap)} → <code>${esc(rec.mergedName)}</code></h3>
         <p class="reasoning">${esc(rec.reasoning)}</p>
         <div class="merge-details">
           <p><strong>Current accuracy:</strong> ${rec.accuracy}%</p>
@@ -600,7 +612,7 @@ function renderShardPlanDetails(plan: ShardPlan): string {
 
 // ── Scan renderer ───────────────────────────────────────────────
 
-function renderScanBody(data: ScanData): string {
+function renderScanBody(data: ScanData, skillInfoMap: SkillInfoMap): string {
   const scoreColor =
     data.healthScore >= 80
       ? SEVERITY_COLORS.LOW
@@ -664,7 +676,7 @@ function renderScanBody(data: ScanData): string {
     <tbody>`;
     for (const pair of overlapFindings) {
       html += `<tr>
-      <td><strong>${esc(pair.skillA)}</strong> ↔ <strong>${esc(pair.skillB)}</strong></td>
+      <td>${skillPairCell(pair.skillA, pair.skillB, skillInfoMap)}</td>
       <td>${(pair.overlapScore * 100).toFixed(0)}%</td>
       <td>${severityBadge(pair.severity)}</td>
       <td>${esc(pair.reason)}</td>
@@ -722,7 +734,7 @@ function renderScanBody(data: ScanData): string {
       });
 
       html += `<div class="skill-card">
-      <h3>${esc(skillName)} ${severityBadge(info.worstSeverity)} <span class="count">${info.conflicts.length} conflict${info.conflicts.length !== 1 ? "s" : ""}</span></h3>
+      <h3>${skillRef(skillName, skillInfoMap)} ${severityBadge(info.worstSeverity)} <span class="count">${info.conflicts.length} conflict${info.conflicts.length !== 1 ? "s" : ""}</span></h3>
       <table>
         <thead><tr><th>Conflicting Skill</th><th>Overlap</th><th>Severity</th></tr></thead>
         <tbody>`;
@@ -750,7 +762,7 @@ function renderScanBody(data: ScanData): string {
     <tbody>`;
     for (const finding of data.overloadFindings) {
       html += `<tr>
-      <td><strong>${esc(finding.skillName)}</strong></td>
+      <td>${skillRef(finding.skillName, skillInfoMap)}</td>
       <td>${finding.descriptionLength} chars</td>
       <td>${esc(finding.reason)}</td>
     </tr>`;
@@ -814,6 +826,25 @@ function renderScanBody(data: ScanData): string {
   }
 
   return html;
+}
+
+// ── Skill link helpers ─────────────────────────────────────────
+
+type SkillInfoMap = Map<string, { filePath?: string; description: string }>;
+
+function skillRef(name: string, map: SkillInfoMap): string {
+  const info = map.get(name);
+  const nameHtml = info?.filePath
+    ? `<a href="file://${esc(info.filePath)}" class="skill-link" title="${esc(info.filePath)}"><strong>${esc(name)}</strong></a>`
+    : `<strong>${esc(name)}</strong>`;
+  const desc = info?.description
+    ? `<span class="skill-desc-preview">${esc(info.description.length > 110 ? info.description.slice(0, 110) + "…" : info.description)}</span>`
+    : "";
+  return `<span class="skill-ref">${nameHtml}${desc}</span>`;
+}
+
+function skillPairCell(nameA: string, nameB: string, map: SkillInfoMap): string {
+  return `<div>${skillRef(nameA, map)}</div><div class="pair-sep">↔</div><div>${skillRef(nameB, map)}</div>`;
 }
 
 // ── Utilities ──────────────────────────────────────────────────
@@ -984,6 +1015,37 @@ section h2 {
 .muted {
   color: var(--text-muted);
   font-size: 0.85rem;
+}
+
+.skill-link {
+  color: inherit;
+  text-decoration-line: underline;
+  text-decoration-color: var(--border);
+  text-underline-offset: 2px;
+  transition: color 0.15s, text-decoration-color 0.15s;
+}
+.skill-link:hover {
+  color: var(--accent);
+  text-decoration-color: var(--accent);
+}
+
+.skill-ref {
+  display: block;
+}
+
+.skill-desc-preview {
+  display: block;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  font-weight: 400;
+  margin-top: 2px;
+  line-height: 1.4;
+}
+
+.pair-sep {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  margin: 3px 0;
 }
 
 table {

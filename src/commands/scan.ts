@@ -216,7 +216,7 @@ export async function scanCommand(options: ScanOptions): Promise<void> {
     model: "local-heuristic",
     provider: "anthropic", // placeholder — scan makes no API calls
     skillCount: skills.length,
-    skills: skills.map((s) => ({ name: s.name, description: s.description })),
+    skills: skills.map((s) => ({ name: s.name, description: s.description, filePath: s.filePath })),
     tokens: { input: 0, output: 0, total: 0 },
     gitCommitHash: getGitCommitHash(),
     result: scanResult,
