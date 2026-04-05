@@ -4,6 +4,20 @@ All notable changes to Homingo will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.15.1] - 2026-04-04
+
+### Added
+
+- **Skill links in reports** — Every skill name in HTML reports is now a clickable `file://` link that opens the corresponding `SKILL.md` directly. Applies across all report types (audit, lint, scan, map) wherever skill names appear in pair tables, overlap findings, overload findings, merge candidates, hubs, and skill profiles.
+- **Inline description previews** — Pair conflict tables now show a short description preview beneath each skill name, giving immediate context for why two skills may be conflicting without requiring a separate file lookup.
+- **Scan heuristic disclosure** — `homingo scan` terminal output now includes a prominent note clarifying that findings are heuristic-only (no API calls) and that `homingo audit` or `homingo lint` should be used to verify flagged pairs.
+- **Scan × lint/audit cache cross-reference** — When prior lint or audit results exist for a flagged pair, `homingo scan` now surfaces the cached routing accuracy alongside the heuristic severity. Terminal output shows `✅ Tested: 92% routing accuracy (2d ago)` inline on the pair row. HTML reports show a **Verified** column (only rendered when at least one cached result exists) with green ✅ or red ❌ accuracy badges and relative timestamps, disambiguating heuristic flags from confirmed routing failures.
+
+### Changed
+
+- `scan` overlap findings section in HTML reports now renders a yellow callout noting the heuristic nature of the analysis and directing users to `homingo audit` or `homingo lint` for accuracy verification.
+- `SkillEntry` in run metadata now includes `filePath` so reports can link directly to skill files on disk.
+
 ## [0.15.0] - 2026-04-01
 
 ### Changed

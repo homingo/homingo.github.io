@@ -17,7 +17,7 @@ export default defineConfig({
       { text: "Commands", link: "/commands/scan" },
       { text: "Concepts", link: "/concepts/routing-drift" },
       {
-        text: "v0.15.0",
+        text: "v0.15.1",
         items: [
           {
             text: "Changelog",
